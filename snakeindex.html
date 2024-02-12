@@ -1,0 +1,95 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake Game</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        
+        canvas {
+            border: 1px solid #333;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <div id="score"></div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        // snakeclient.js
+const socket = io();
+
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+const scoreElement = document.getElementById("score");
+
+socket.on("init", ({ snakes, food }) => {
+    // Handle initial game state
+    renderGame(snakes, food);
+});
+
+socket.on("update", ({ snakes, food, scores }) => {
+    // Handle updated game state and scores
+    renderGame(snakes, food, scores);
+});
+
+
+function renderGame(snakes, food, scores) {
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Render food
+    ctx.fillStyle = "red";
+    ctx.fillRect(food.x * 20, food.y * 20, 20, 20);
+
+    // Render snakes
+    for (const snakeId in snakes) {
+        const snake = snakes[snakeId];
+        for (const segment of snake) {
+            ctx.fillStyle = segment.color;
+            ctx.fillRect(segment.x * 20, segment.y * 20, 20, 20);
+        }
+    }
+
+    // Render score
+    // Assume score is provided by the server
+    // You can update this part once the score is implemented
+    // Render score
+    scoreElement.textContent = "Score: " + (scores[socket.id] || 0);
+}
+
+document.addEventListener("keydown", (event) => {
+    // Handle arrow key presses to change snake direction
+    let direction;
+    switch (event.key) {
+        case "ArrowUp":
+            direction = "up";
+            break;
+        case "ArrowDown":
+            direction = "down";
+            break;
+        case "ArrowLeft":
+            direction = "left";
+            break;
+        case "ArrowRight":
+            direction = "right";
+            break;
+    }
+    if (direction) {
+        socket.emit("move", direction);
+    }
+});
+
+    </script>
+</body>
+</html>
